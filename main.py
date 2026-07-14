@@ -141,7 +141,7 @@ async def cmd_doni(client: Client, message: Message):
         "household have already completed their subscriptions in accordance with our exchange. "
         f"{teks_reaksi} has subscribed yours. "
         "We would be most grateful if the aforementioned accounts could also be included "
-        "within your mensive through [https://t.me/Louzhens/6] at your convenience. "
+        "within your mensive through [https://t.me/Louzhens/31] at your convenience. "
         "This allows us to maintain proper records and ensure that everything proceeds "
         "harmoniously between our households. 📨\n\n"
         "With regards,\n"
