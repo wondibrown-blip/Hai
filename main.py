@@ -3,11 +3,25 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.raw import functions
 from pyrogram.raw.types import InputPeerChannel, ReactionEmoji
+from pyrogram import utils
 
 # ==================== CONFIGURATION ====================
-API_ID =  38822592         # Ganti dengan API ID kamu (integer)
-API_HASH = '9af6135950acf29e7038d48c435d1f0d' # Ganti dengan API Hash kamu (string)
-SESSION_STRING = 'BQJQYsAACJjHiakcg1k0yU9DnqThrewI6b5v6wZeJ68yoKMTefoHuFL0vcILBdFndm4TT2QvXaMC9PHJtonsAAtOmai2OKr8bX_HZFPrN1fN9fclxwET6DbALIfs0PH4pUcZJWsAyQa_Ye4wuLHcsSgLS_ny-M_E5Ce0F9ooAOMY7LC3PdEtHyzfRCxS1MG36hYRVSZu2yoGm551qj-z6w6DZFrpmj_8HaH6ScuAHA88oenTrbGMOjqFBpEEgZvRWqJnqT41TuCJ6aVdHgcTHFAYI4oBpfAGbhC4gDF21KDE1TdnOxlstIStevCagDlv3W53U4w7lX1O3d_vZohNWde1flca0QAAAAHUe5liAA' # Tempel kode Session String kamu di sini
+API_ID = 38822592         # API ID kamu (integer)
+API_HASH = '9af6135950acf29e7038d48c435d1f0d' # API Hash kamu (string)
+SESSION_STRING = 'BQJQYsAACJjHiakcg1k0yU9DnqThrewI6b5v6wZeJ68yoKMTefoHuFL0vcILBdFndm4TT2QvXaMC9PHJtonsAAtOmai2OKr8bX_HZFPrN1fN9fclxwET6DbALIfs0PH4pUcZJWsAyQa_Ye4wuLHcsSgLS_ny-M_E5Ce0F9ooAOMY7LC3PdEtHyzfRCxS1MG36hYRVSZu2yoGm551qj-z6w6DZFrpmj_8HaH6ScuAHA88oenTrbGMOjqFBpEEgZvRWqJnqT41TuCJ6aVdHgcTHFAYI4oBpfAGbhC4gDF21KDE1TdnOxlstIStevCagDlv3W53U4w7lX1O3d_vZohNWde1flca0QAAAAHUe5liAA' # Session String kamu
+
+# Patch untuk memperbaiki deteksi ID Telegram yang terlalu panjang (64-bit ID)
+def get_peer_type_new(peer_id: int) -> str:
+    peer_id_str = str(peer_id)
+    if not peer_id_str.startswith("-"):
+        return "user"
+    elif peer_id_str.startswith("-100"):
+        return "channel"
+    else:
+        return "chat"
+
+# Menimpa fungsi bawaan Pyrogram dengan fungsi baru kita
+utils.get_peer_type = get_peer_type_new
 
 app = Client("my_userbot11", api_id=API_ID, api_hash=API_HASH, session_string=SESSION_STRING)
 
@@ -81,7 +95,6 @@ async def process_reaction_list(client: Client, message: Message):
     pemberi_ma = list(set(pemberi_ma))
     pemberi_sa = list(set(pemberi_sa))
     
-    
     return pemberi_ma, pemberi_sa
 
 
@@ -151,6 +164,20 @@ async def cmd_doni(client: Client, message: Message):
     
     await message.reply_text(text=caption_template)
 
+# ==================== STARTUP LOGIC ====================
 
-print("⚡ Userbot Pyrogram /done & /doni Aktif (Username Fix)!")
-app.run()
+async def main():
+    async with app:
+        print("Memperbarui database sesi ID chat...")
+        # Pyrogram akan memindai dialog untuk mengunduh cache ID chat ke session string
+        async for dialog in app.get_dialogs():
+            pass  
+        print("Sesi siap digunakan!")
+        
+        # Menjaga bot agar tetap standby mendengarkan commands
+        await asyncio.Event().wait()
+
+if __name__ == "__main__":
+    print("⚡ Userbot Pyrogram /done & /doni Aktif (Username Fix & Startup Fix)!")
+    # Jalankan program melalui fungsi main() agar pemindaian dialog dijalankan
+    app.run(main())
