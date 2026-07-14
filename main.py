@@ -5,9 +5,9 @@ from pyrogram.raw import functions
 from pyrogram.raw.types import InputPeerChannel, ReactionEmoji
 
 # ==================== CONFIGURATION ====================
-API_ID = 32500857         
-API_HASH = "777a8c5d7b009d027a2d3b64b67652f1"  
-SESSION_STRING = "BQHv7HkABfcNqruKJmIqHXxLaI_b5OXfnjp6xLx43mZXc9Jc-0f_oVCEAL5_xIzHrfP1dx-EQhu3vVWeVwKJhOeAZKOMHz1YRmub0HNTyfwKP034CMZjdGgmtQrVDS_bXLGv5JqARuXlpu2Tpx1UX-qNxtHY1WXU1pCzpKhQNxrWeyEwSKRNbdwfr7APjpZvwv058cS7sVJGbhhp5HHQXjoGE67Y6LuElYtRMg4Je28m3rkj2rHReVtZ1L1pso5kH7ZJoCq6MEFZxxxzMs_W0OUktEEBXP_NXy356DPxYf8yPEYjGH4C-O--ZRTcauPwdwwKo-I7GkIfDhvbvN9IIRUKJU5dlQAAAAH62YR3AA"
+API_ID =  38822592         # Ganti dengan API ID kamu (integer)
+API_HASH = '9af6135950acf29e7038d48c435d1f0d' # Ganti dengan API Hash kamu (string)
+SESSION_STRING = '1BVtsOLUBuzry0mdizKodbyidX8rGJVVXK1Jc38WJRD8-KUmQG2Xszj9rfdlab8rkSudnEX7DA2lmM78WU9X2rHZmQHJED339rCECidPzxT7dFzvtIgrwMQAoF-yp5lvgofOWAFy-BFBMwg581T_mOeqLudIbxaCOrla-p_iHXca9bUZikd0TU6K4Fi0HgpyC157d1N-JdEKB_UbVFrPqfOI6IVMVJI1TjciSoN3C-9IW-S1QDoJdgYrFinB9R8V_ZQ5bOzaDLrmigLvPzgHzHRFbV6hl4xMcmeE5wri1BL64oHYX2uHSB99SWd8Axch5uvbLU0FMHuK1y8F5KLmfaF_W_niUp10=' # Tempel kode Session String kamu di sini
 
 app = Client("my_userbot11", api_id=API_ID, api_hash=API_HASH, session_string=SESSION_STRING)
 
