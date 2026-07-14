@@ -14,30 +14,23 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 @client.on(events.NewMessage(pattern=r'^/(done|doni)$'))
 async def hitung_reaksi(event):
     if not event.is_reply:
-        await event.reply("Rep ke bbc yg ingin dihitung")
+        await event.reply("⚠️ **Mohon balas (reply) ke pesan yang ingin dihitung reaksinya!**")
         return
 
     command = event.pattern_match.group(1).lower()
     reply_msg = await event.get_reply_message()
     input_peer = await event.get_input_chat()
     
-    # PERBAIKAN 1: Cek dulu apakah pesan tersebut punya reaksi atau tidak sebelum panggil API
-    # Ini untuk mencegah error "invalid (caused by GetMessageReactionsListRequest)" saat sepi react
-    if not reply_msg.reactions or reply_msg.reactions.results == []:
-        await event.reply("Gak ada react")
-        return
-
     pemberi_ma = [] # React 🔥
     pemberi_sa = [] # React ❤️
 
     try:
+        # Ambil daftar reaksi dari Telegram Server
         reaction_list = await client(GetMessageReactionsListRequest(
             peer=input_peer,
             id=reply_msg.id,
             limit=100
         ))
-        
-        users_dict = {u.id: u for u in reaction_list.users}
         
         for r in reaction_list.reactions:
             if hasattr(r.peer_id, 'user_id'):
@@ -45,17 +38,18 @@ async def hitung_reaksi(event):
             else:
                 continue
                 
-            user = users_dict.get(user_id)
-            if not user:
-                continue
+            try:
+                # PERBAIKAN UTAMA: Ambil entity lengkap secara real-time dari server
+                # Ini memaksa Telegram memunculkan username asli kamu, bukan cache DN
+                user = await client.get_entity(user_id)
                 
-            # PERBAIKAN 2: Memastikan pengambilan username yang valid dari object user Telethon
-            username = getattr(user, 'username', None)
-            
-            if username:
-                user_mention = f"@{username}"
-            else:
-                user_mention = user.first_name if user.first_name else "No Name"
+                if user.username:
+                    user_mention = f"@{user.username}"
+                else:
+                    user_mention = user.first_name if user.first_name else "No Name"
+            except Exception:
+                # Fail-safe jika entity gagal ditarik, gunakan nama bawaan
+                user_mention = "No Name"
             
             if isinstance(r.reaction, ReactionEmoji):
                 emoji = r.reaction.emoticon
@@ -65,12 +59,14 @@ async def hitung_reaksi(event):
                     pemberi_sa.append(user_mention)
                     
     except Exception as e:
-        await event.reply(f"❌ Error: {e}")
+        if "invalid" in str(e).lower() or "not found" in str(e).lower():
+            await event.reply("🤷‍♂️ **Tidak ditemukan reaksi 🔥 (MA) atau ❤️ (SA) pada pesan ini.**")
+        else:
+            await event.reply(f"❌ **Error:** {e}")
         return
 
-    # Jika ada reaksi lain (misal jempol 👍) tapi tidak ada MA/SA
     if not pemberi_ma and not pemberi_sa:
-        await event.reply("Gak ada react love atau api")
+        await event.reply("🤷‍♂️ **Tidak ditemukan reaksi 🔥 (MA) atau ❤️ (SA) pada pesan ini.**")
         return
 
     # --- PROSES PERINTAH /done ---
@@ -114,6 +110,6 @@ async def hitung_reaksi(event):
         )
         await event.reply(template_pesan, parse_mode='markdown', link_preview=False)
 
-print("Userbot Fix Bug Aktif!")
+print("Userbot Real-time Entity Version Aktif!")
 client.start()
 client.run_until_disconnected()
