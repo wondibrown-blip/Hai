@@ -14,42 +14,41 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 @client.on(events.NewMessage(pattern=r'^/(done|doni)$'))
 async def hitung_reaksi(event):
     if not event.is_reply:
-        await event.reply("Rep pesan yg ingin dihitung reactnya")
+        await event.reply("⚠️ **Mohon balas (reply) ke pesan yang ingin dihitung reaksinya!**")
         return
 
     command = event.pattern_match.group(1).lower()
     reply_msg = await event.get_reply_message()
+    input_peer = await event.get_input_chat()
     
     pemberi_ma = [] # React 🔥
     pemberi_sa = [] # React ❤️
 
     try:
-        # Menggunakan Raw API Telethon untuk mengambil daftar pereaksi
-        # Limit maksimal dari Telegram adalah 100 per request
         reaction_list = await client(GetMessageReactionsListRequest(
-            peer=event.chat_id,
+            peer=input_peer,
             id=reply_msg.id,
             limit=100
         ))
         
-        # Buat kamus (dictionary) untuk mencocokkan ID User dengan datanya
         users_dict = {u.id: u for u in reaction_list.users}
         
-        # Iterasi setiap detail reaksi
         for r in reaction_list.reactions:
-            user_id = r.peer_id.user_id
+            if hasattr(r.peer_id, 'user_id'):
+                user_id = r.peer_id.user_id
+            else:
+                continue
+                
             user = users_dict.get(user_id)
-            
             if not user:
                 continue
                 
-            # Tentukan format mention
+            # LOGIKA PRIORITAS: Username -> Display Name (Nama Depan)
             if user.username:
                 user_mention = f"@{user.username}"
             else:
-                user_mention = f"[{user.first_name}](tg://user?id={user.id})"
+                user_mention = user.first_name # Hanya Display Name tanpa imbuhan apa pun
             
-            # Cek emojinya
             if isinstance(r.reaction, ReactionEmoji):
                 emoji = r.reaction.emoticon
                 if emoji == "🔥":
@@ -58,12 +57,11 @@ async def hitung_reaksi(event):
                     pemberi_sa.append(user_mention)
                     
     except Exception as e:
-        await event.reply(f"❌ Error: {e}")
+        await event.reply(f"❌ **Error:** {e}\n\n*Pastikan akun userbot adalah admin grup agar bisa melihat detail pereaksi.*")
         return
 
-    # Jika sama sekali tidak ada react MA maupun SA
     if not pemberi_ma and not pemberi_sa:
-        await event.reply("Gak ada react")
+        await event.reply("🤷‍♂️ **Tidak ditemukan reaksi 🔥 (MA) atau ❤️ (SA) pada pesan ini.**")
         return
 
     # --- PROSES PERINTAH /done ---
@@ -107,6 +105,6 @@ async def hitung_reaksi(event):
         )
         await event.reply(template_pesan, parse_mode='markdown', link_preview=False)
 
-print("Userbot Publik (V1 Fix) Aktif!")
+print("Userbot Publik (Username/DN Only) Aktif!")
 client.start()
 client.run_until_disconnected()
