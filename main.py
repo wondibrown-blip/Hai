@@ -36,7 +36,6 @@ async def process_reaction_list(client: Client, message: Message):
             )
         )
         
-        # Buat mapping ID User ke Objek User agar mudah dicari
         users_map = {u.id: u for u in raw_reply.users}
         
         # 3. Iterasi setiap reaksi yang masuk
@@ -50,7 +49,7 @@ async def process_reaction_list(client: Client, message: Message):
                 if not raw_user:
                     continue
                 
-                # --- LOGIKA PENARIKAN USERNAME / DN (Sesuai Permintaan) ---
+                # --- LOGIKA PENARIKAN USERNAME / DN ---
                 username = None
                 if getattr(raw_user, "username", None):
                     username = raw_user.username
@@ -60,18 +59,19 @@ async def process_reaction_list(client: Client, message: Message):
                             username = u.username
                             break
                 
-                # Prioritas: Pakai @username, jika tidak ada pakai Display Name (first_name)
                 if username:
                     user_mention = f"@{username}"
                 else:
                     user_mention = raw_user.first_name if raw_user.first_name else "No Name"
                 
-                # --- KLASIFIKASI EMOJI ---
+                # --- PERBAIKAN FILTER EMOJI (Deteksi Multi-Karakter Love) ---
                 if isinstance(r.reaction, ReactionEmoji):
                     emoji = r.reaction.emoticon
+                    
                     if emoji == "🔥":
                         pemberi_ma.append(user_mention)
-                    elif emoji == "❤️" or emoji == "❤️":
+                    # Mendeteksi segala jenis variasi emoji Love merah di Telegram
+                    elif emoji in ["❤️", "♥️", "\u2764\ufe0f", "\u2764"]:
                         pemberi_sa.append(user_mention)
 
     except Exception as e:
@@ -80,6 +80,7 @@ async def process_reaction_list(client: Client, message: Message):
     # Bersihkan duplikat
     pemberi_ma = list(set(pemberi_ma))
     pemberi_sa = list(set(pemberi_sa))
+    
     
     return pemberi_ma, pemberi_sa
 
