@@ -14,13 +14,19 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
 @client.on(events.NewMessage(pattern=r'^/(done|doni)$'))
 async def hitung_reaksi(event):
     if not event.is_reply:
-        await event.reply("⚠️ **Mohon balas (reply) ke pesan yang ingin dihitung reaksinya!**")
+        await event.reply("Rep ke bbc yg ingin dihitung")
         return
 
     command = event.pattern_match.group(1).lower()
     reply_msg = await event.get_reply_message()
     input_peer = await event.get_input_chat()
     
+    # PERBAIKAN 1: Cek dulu apakah pesan tersebut punya reaksi atau tidak sebelum panggil API
+    # Ini untuk mencegah error "invalid (caused by GetMessageReactionsListRequest)" saat sepi react
+    if not reply_msg.reactions or reply_msg.reactions.results == []:
+        await event.reply("Gak ada react")
+        return
+
     pemberi_ma = [] # React 🔥
     pemberi_sa = [] # React ❤️
 
@@ -43,11 +49,13 @@ async def hitung_reaksi(event):
             if not user:
                 continue
                 
-            # LOGIKA PRIORITAS: Username -> Display Name (Nama Depan)
-            if user.username:
-                user_mention = f"@{user.username}"
+            # PERBAIKAN 2: Memastikan pengambilan username yang valid dari object user Telethon
+            username = getattr(user, 'username', None)
+            
+            if username:
+                user_mention = f"@{username}"
             else:
-                user_mention = user.first_name # Hanya Display Name tanpa imbuhan apa pun
+                user_mention = user.first_name if user.first_name else "No Name"
             
             if isinstance(r.reaction, ReactionEmoji):
                 emoji = r.reaction.emoticon
@@ -57,11 +65,12 @@ async def hitung_reaksi(event):
                     pemberi_sa.append(user_mention)
                     
     except Exception as e:
-        await event.reply(f"❌ **Error:** {e}\n\n*Pastikan akun userbot adalah admin grup agar bisa melihat detail pereaksi.*")
+        await event.reply(f"❌ Error: {e}")
         return
 
+    # Jika ada reaksi lain (misal jempol 👍) tapi tidak ada MA/SA
     if not pemberi_ma and not pemberi_sa:
-        await event.reply("🤷‍♂️ **Tidak ditemukan reaksi 🔥 (MA) atau ❤️ (SA) pada pesan ini.**")
+        await event.reply("Gak ada react love atau api")
         return
 
     # --- PROSES PERINTAH /done ---
@@ -105,6 +114,6 @@ async def hitung_reaksi(event):
         )
         await event.reply(template_pesan, parse_mode='markdown', link_preview=False)
 
-print("Userbot Publik (Username/DN Only) Aktif!")
+print("Userbot Fix Bug Aktif!")
 client.start()
 client.run_until_disconnected()
